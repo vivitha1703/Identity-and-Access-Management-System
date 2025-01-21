@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard</title>
+    <style>
+        /* Global styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #414346;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            width: 250px;
+            background-color:#2A3D66 ;
+            color: white;
+            padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+            position: fixed;
+        }
+
+        .sidebar h2 {
+            margin: 0 0 20px;
+            font-size: 22px;
+        }
+
+        .sidebar button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            color: #007bff;
+            background-color: #FF7043;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar button:hover {
+            background-color: #e9ecef;
+        }
+
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+
+        /* Main content styles */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            flex: 1;
+        }
+
+        .main-content h1 {
+            color: #ece1e1;
+        }
+
+        .transaction-form {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .transaction-form input,
+        .transaction-form select {
+            display: block;
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .transaction-form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .transaction-form button:hover {
+            background-color: #218838;
+        }
+
+        .table-container {
+            margin: 20px 0;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .search-container {
+            margin-bottom: 10px;
+        }
+
+        .search-container input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .search-container button {
+            padding: 8px 12px;
+            margin-left: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #D4AF37;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-container button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table th, table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #D4AF37;
+            color: white;
+        }
+
+        .btn-view {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-view:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Manager Panel</h2>
+        <button onclick="showTransactions()">View Transactions</button>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="main-content">
+        <h1>Welcome, Manager</h1>
+        <p>Use the panel to manage customer transaction history.</p>
+
+        <div class="table-container" id="transactions">
+            <h2>Customer Transaction History</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Account Number</th>
+                        <th>Transaction Amount</th>
+                        <th>Type</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.date }}</td>
+                        <td>{{ transaction.customer_name }}</td>
+                        <td>{{ transaction.account_number }}</td>
+                        <td>{{ transaction.amount }}</td>
+                        <td>{{ transaction.transaction_type }}</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="viewTransaction('{{ transaction.date }}', '{{ transaction.customer_name }}', '{{ transaction.account_number }}', '{{ transaction.amount }}', '{{ transaction.transaction_type }}')">View</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No transactions available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+
+        <!-- Transaction Form -->
+        <div class="transaction-form" id="transactionForm">
+            <h2>Add New Transaction</h2>
+            <input type="text" id="customerName" placeholder="Customer Name" required>
+            <input type="text" id="accountNumber" placeholder="Account Number" required>
+            <input type="number" id="transactionAmount" placeholder="Transaction Amount" required>
+            <input type="date" id="transactionDate" required>
+            <input type="time" id="transactionTime" required>
+            <select id="transactionType">
+                <option value="Credit">Credit</option>
+                <option value="Debit">Debit</option>
+            </select>
+            <button onclick="addTransaction()">Submit Transaction</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to show the transactions section
+        function showTransactions() {
+            const transactionsSection = document.getElementById('transactions');
+            transactionsSection.style.display = 'block';
+        }
+
+
+        // Function to add a new transaction
+        async function addTransaction() {
+            const customerName = document.getElementById('customerName').value;
+            const accountNumber = document.getElementById('accountNumber').value;
+            const transactionAmount = document.getElementById('transactionAmount').value;
+            const transactionDate = document.getElementById('transactionDate').value;
+            const transactionTime = document.getElementById('transactionTime').value;
+            const transactionType = document.getElementById('transactionType').value;
+        
+            // Validate fields
+            if (!customerName || !accountNumber || !transactionAmount || !transactionDate || !transactionTime || !transactionType) {
+                alert('All fields are required.');
+                return;
+            }
+        
+            try {
+                const response = await fetch('/api/transactions/add/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_name: customerName,
+                        account_number: accountNumber,
+                        amount: transactionAmount,
+                        date: transactionDate,
+                        time: transactionTime,
+                        transaction_type: transactionType
+                    }),
+                });
+        
+                if (!response.ok) {
+                    throw new Error('Failed to add transaction');
+                }
+        
+                const transaction = await response.json();
+                alert('Transaction added successfully');
+        
+                // Optionally, you can clear the form or update the UI
+                document.getElementById('customerName').value = '';
+                document.getElementById('accountNumber').value = '';
+                document.getElementById('transactionAmount').value = '';
+                document.getElementById('transactionDate').value = '';
+                document.getElementById('transactionTime').value = '';
+                document.getElementById('transactionType').value = 'Credit'; // Reset to default
+            } catch (error) {
+                console.error('Error adding transaction:', error);
+                alert('Error adding transaction. Please try again.');
+            }
+        }
+        
+        // Function to search transactions by date
+        function searchTransactions() {
+            const searchDate = document.getElementById('searchDate').value;
+            const table = document.getElementById('transactionTable').getElementsByTagName('tbody')[0];
+            const rows = table.getElementsByTagName('tr');
+
+            Array.from(rows).forEach(row => {
+                const dateCell = row.cells[0].textContent.trim();
+
+                // Show row if date matches or if the search date is empty
+                if (searchDate === '' || dateCell.includes(searchDate)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Function to reset the search filter
+        function resetSearch() {
+            document.getElementById('searchDate').value = '';
+            searchTransactions(); 
+        }
+
+        function viewTransaction(date, customerName, accountNumber, amount, transactionType) {
+            const details = `
+                Date: ${date}
+                Name: ${customerName}
+                Account Number: ${accountNumber}
+                Transaction Amount: ${amount}
+                Type: ${transactionType}
+            `;
+            alert(details);
+        }
+
+        // Function to handle logout action
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

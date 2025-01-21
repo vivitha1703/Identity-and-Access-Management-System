@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script type="text/javascript">
+    const csrfToken = "{{ csrf_token }}";
+</script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('https://source.unsplash.com/featured/?admin,management') no-repeat center center/cover;
+            height: 100vh;
+            display: flex;
+            color: #faf3f3;
+        }
+        .sidebar {
+            width: 250px;
+            background: #2A3D66;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .sidebar h2 {
+            margin: 0;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .sidebar button {
+            margin: 10px 0;
+            padding: 10px 15px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #F8F8FF;
+            background: #FF7043;
+            transition: background 0.3s;
+            text-align: left;
+        }
+        .sidebar button:hover {
+            background: #495057;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border-top-left-radius: 10px;
+            overflow-y: auto;
+        }
+        .main-content h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        .table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: #fff;
+            color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #007bff;
+            color: #fff;
+        }
+        .btn {
+            padding: 5px 10px;
+            font-size: 0.9em;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-edit {
+            background: #28a745;
+            color: #fff;
+        }
+        .btn-edit:hover {
+            background: #218838;
+        }
+        .btn-unlock {
+            background: #7b23a1;
+            color: #fff;
+        }
+        .btn-unlock:hover {
+            background: #581465;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: #fff;
+        }
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        .btn-logout {
+            margin-top: auto;
+            background: #ffc107;
+            color: #000;
+        }
+        .btn-logout:hover {
+            background: #e0a800;
+        }
+        .user-section {
+            margin-top: 20px;
+            background: #343a40;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #ffc107;
+        }
+        .log-item {
+            background: #495057;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            color: #fafafa;
+        }
+        .log-section {
+            background: #444;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .customer-form, .manager-form {
+            margin-top: 20px;
+            background: #444;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .customer-form input, .manager-form input {
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            width: calc(50% - 10px);
+        }
+        .customer-form button, .manager-form button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .customer-form button:hover, .manager-form button:hover {
+            background: #0056b3;
+        }
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0, 0, 0, 0.4); 
+        }
+        
+        .modal-content {
+            color: rgb(123, 39, 39);
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 20px;
+            border-radius: 8px; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+            width: 400px; 
+            max-width: 90%; 
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .modal-content label {
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+        }
+        
+        .modal-content input {
+            width: 80%; 
+            padding: 10px; 
+            margin-bottom: 15px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .modal-content button {
+            background-color: #4CAF50; 
+            color: white; 
+            padding: 10px 15px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            transition: background-color 0.3s; 
+        }
+        
+        .modal-content button:hover {
+            background-color: #45a049; 
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <button onclick="showSection('customers')">Customer Details</button>
+        <button onclick="showSection('transactions')">Customer Transactions</button>
+        <button onclick="showSection('manager')">Manager Details</button>
+        <button onclick="showSection('auditLogs')">Audit Logs</button>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <h1>Welcome, Admin</h1>
+        <p>Select an option from the sidebar to manage the platform.</p>
+
+        <!-- Customers Details Section -->
+        <div class="table-container" id="customers" style="display: none;">
+            <h2>Manage Customers</h2>
+            <div class="customer-form">
+                <h3>Add New Customer</h3>
+                <input type="text" id="customerName" placeholder="Name" required>
+                <input type="text" id="customerAccountNumber" placeholder="Account Number" required>
+                <input type="text" id="customerPhoneNumber" placeholder="Phone Number" required>
+                <input type="number" id="customerBalance" placeholder="Balance" required step="0.01">
+                <input type="password" id="customerPassword" placeholder="Password" required> 
+                <input type="text" id="customerDeviceID" placeholder="Device ID" required>
+                <button onclick="addCustomer()">Add Customer</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Account Number</th>
+                        <th>Phone Number</th>
+                        <th>Balance</th>
+                        <th>Password</th> 
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody">
+                    {% for customer in customers %}
+                    <tr id="customerRow{{ customer.customer_id }}">
+                        <td>{{ customer.customer_id }}</td>
+                        <td>Hello</td> 
+                        <td id="customerName{{ customer.customer_id }}">{{ customer.name }}</td>
+                        <td id="customerAccountNumber{{ customer.customer_id }}">{{ customer.account_number }}</td>
+                        <td id="customerPhoneNumber{{ customer.customer_id }}">{{ customer.phone_number }}</td>
+                        <td id="customerBalance{{ customer.customer_id }}">{{ customer.balance }}</td>
+                        <td id="customerPassword{{ customer.customer_id }}">{{ customer.password }}</td>   
+                        <td>
+                            <button class="btn btn-edit" onclick="showEditCustomerModal({{ customer.customer_id }})">Edit</button>
+                            <button class="btn btn-delete" onclick="deleteCustomer({{ customer.customer_id }})">Delete</button>
+                            <p>{{ customer.is_locked }}</p>
+                            <button class="btn btn-unlock" onclick="unlockCustomer({{ customer.customer_id }})" style="display: block !important;">Unlock</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table> 
+        </div>
+        <div id="editCustomerModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>Edit Customer</h2>
+                <label for="editCustomerId">Customer ID:</label>
+                <input type="text" id="editCustomerId" disabled>   
+                <label for="editCustomerName">Name:</label>
+                <input type="text" id="editCustomerName" required>
+                <label for="editCustomerAccountNumber">Account Number:</label>
+                <input type="text" id="editCustomerAccountNumber" required>
+                <label for="editCustomerPhoneNumber">Phone Number:</label>
+                <input type="text" id="editCustomerPhoneNumber" required>
+                <label for="editCustomerPassword">Password:</label>
+                <input type="password" id="editCustomerPassword" required>
+                <button onclick="updateCustomer()">Update Customer</button>
+            </div>
+        </div>
+
+        <!-- Customer Transactions Section -->
+        <div class="table-container" id="transactions">
+            <h2>Customer Transaction History</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Account Number</th>
+                        <th>Transaction Amount</th>
+                        <th>Type</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.date }}</td>
+                        <td>{{ transaction.customer_name }}</td>
+                        <td>{{ transaction.account_number }}</td>
+                        <td>{{ transaction.amount }}</td>
+                        <td>{{ transaction.transaction_type }}</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="viewTransaction('{{ transaction.date }}', '{{ transaction.customer_name }}', '{{ transaction.account_number }}', '{{ transaction.amount }}', '{{ transaction.transaction_type }}')">View</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No transactions available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+
+        <!-- Manager Performance Section -->
+        <div class="table-container" id="manager" style="display: none;">
+            <h2>Manager Details</h2>
+            <div class="manager-form">
+                <h3>Add New Manager</h3>
+                <input type="text" id="managerName" placeholder="Name" required>
+                <input type="text" id="managerLevel" placeholder="Junior, Middle, Senior, Top" required>
+                <input type="text" id="managerPhoneNumber" placeholder="Phone Number" required>
+                <input type="number" id="managerExperience" placeholder="Years of experience" required>
+                <input type="password" id="managerPassword" placeholder="Password" required> 
+                <button onclick="addManager()">Add Manager</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Manager ID</th>
+                        <th>Name</th>
+                        <th>Level</th>
+                        <th>Phone Number</th>
+                        <th>Years of Experience</th>
+                        <th>Password</th>  
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="managerTableBody">
+                    {% for manager in managers %}
+                    <tr id="managerRow{{ manager.manager_id }}">
+                        <td>{{ manager.manager_id }}</td>
+                        <td id="managerName{{ manager.manager_id }}">{{ manager.name }}</td>
+                        <td id="managerLevel{{ manager.manager_id }}">{{ manager.level }}</td>
+                        <td id="managerPhoneNumber{{ manager.manager_id }}">{{ manager.phone_number }}</td>
+                        <td id="managerExperience{{ manager.manager_id }}">{{ manager.years_of_experience }}</td>
+                        <td id="managerPassword{{ manager.manager_id }}">{{ manager.password }}</td> 
+                        <td>
+                            <button class="btn btn-edit" onclick="showEditManagerModal({{ manager.manager_id }})">Edit</button>
+                            <button class="btn btn-delete" onclick="deleteManager({{ manager.manager_id }})">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table> 
+        </div>
+        <div id="editManagerModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>Edit Manager</h2>
+                <label for="editManagerId">Manager ID:</label>
+                <input type="text" id="editManagerId" disabled>   
+                <label for="editManagerName">Name:</label>
+                <input type="text" id="editManagerName" required>
+                <label for="editManagerLevel">Level (Junior, Middle, Senior, Top):</label>
+                <input type="text" id="editManagerLevel" required>
+                <label for="editManagerPhoneNumber">Phone Number:</label>
+                <input type="text" id="editManagerPhoneNumber" required>
+                <label for="editManagerExperience">Years of Experience:</label>
+                <input type="number" id="editManagerExperience" required>
+                <label for="editManagerPassword">Password:</label>
+                <input type="password" id="editManagerPassword" required>
+                <button onclick="updateManager()">Update Manager</button>
+            </div>
+        </div>
+
+        <!-- Audit Logs Section -->
+        <div class="user-section" id="auditLogs" style="display: none;">
+            <h2>Audit Logs</h2>
+
+            <!-- User 1 Logs -->
+            <div class="log-section">
+                <div class="log-header">
+                    <span>User ID: 101</span>
+                    <span>Date: 2024-09-20</span>
+                </div>
+                <div class="log-item">Successful Login, IP: 192.168.1.1</div>
+                <div class="log-item">Failed Login: Reason: Incorrect Password, IP: 192.168.1.2</div>
+                <div class="log-item">OTP Request: IP: 192.168.1.1, Method: SMS</div>
+                <div class="log-item">OTP Verification: Result: Successful</div>
+                <div class="log-item">Resource Access: Financial Records, Action: Read</div>
+            </div>
+
+            <!-- User 2 Logs -->
+            <div class="log-section">
+                <div class="log-header">
+                    <span>User ID: 102</span>
+                    <span>Date: 2024-09-20</span>
+                </div>
+                <div class="log-item">Successful Login, IP: 192.168.2.1</div>
+                <div class="log-item">OTP Request: IP: 192.168.2.1, Method: Email</div>
+                <div class="log-item">Resource Access: Customer Transactions, Action: Update</div>
+                <div class="log-item">Logout Event</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function showSection(sectionId) {
+        const sections = document.querySelectorAll('.table-container, .user-section');
+        sections.forEach(section => section.style.display = 'none');
+        document.getElementById(sectionId).style.display = 'block';
+
+        if (sectionId === 'auditLogs') {
+            fetchAuditLogs();
+        } else if (sectionId === 'customers') {
+            fetchCustomers();
+        } else if (sectionId === 'manager') {
+            fetchManagers();
+        }
+    }
+
+    function logout() {
+        alert('You have been logged out.');
+        window.location.href = '/'; // Redirect to login page or main page
+    }
+
+    // Fetch audit logs from the backend
+    async function fetchAuditLogs() {
+        try {
+            const response = await fetch('http://localhost:5000/api/audit-logs');
+            const logs = await response.json();
+            const auditLogsContainer = document.getElementById('auditLogs');
+            auditLogsContainer.innerHTML = '';
+
+            logs.forEach((log) => {
+                const logSection = document.createElement('div');
+                logSection.classList.add('log-section');
+                logSection.innerHTML = `
+                    <div class="log-header">
+                        <span>User ID: ${log.userId}</span>
+                        <span>Date: ${new Date(log.date).toLocaleDateString()}</span>
+                    </div>
+                    <div class="log-item">Action: ${log.action}, IP: ${log.ip}</div>
+                `;
+                auditLogsContainer.appendChild(logSection);
+            });
+        } catch (error) {
+            console.error('Error fetching audit logs:', error);
+        }
+    }
+
+
+    // ************************** Customer Details Section *********************************
+    // Fetch customers from the backend
+    async function fetchCustomers() {
+        try {
+            const response = await fetch('/api/customers/');
+            const customers = await response.json();
+
+            const customerTableBody = document.getElementById('customerTableBody');
+            customerTableBody.innerHTML = '';
+
+            customers.forEach(customer => {
+                const row = document.createElement('tr');
+                row.id = `customerRow${customer.customer_id}`;  // Set the row ID for deletion
+                row.innerHTML = `
+                    <td>${customer.customer_id}</td>
+                    <td id="customerName${customer.customer_id}">${customer.name}</td>
+                    <td id="customerAccountNumber${customer.customer_id}">${customer.account_number}</td>
+                    <td id="customerPhoneNumber${customer.customer_id}">${customer.phone_number}</td>
+                    <td id="customerBalance${customer.customer_id}">${customer.balance}</td>
+                    <td id="customerPassword${customer.customer_id}">${customer.password}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="showEditCustomerModal(${customer.customer_id})">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteCustomer(${customer.customer_id})">Delete</button>
+                        <button class="btn btn-unlock" onclick="unlockCustomer(${customer.customer_id})">Unlock</button>
+
+                    </td>
+                `;
+                customerTableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error fetching customers:', error);
+        }
+    }
+
+    // Add Customer Function
+    async function addCustomer() {
+        const name = document.getElementById('customerName').value;
+        const accountNumber = document.getElementById('customerAccountNumber').value;
+        const phoneNumber = document.getElementById('customerPhoneNumber').value;
+        const balance = document.getElementById('customerBalance').value;
+        const password = document.getElementById('customerPassword').value;
+        const deviceID = document.getElementById('customerDeviceID').value;
+
+        // Check if all fields are filled
+        if (!name || !accountNumber || !phoneNumber || !balance || !password || !deviceID) {
+            alert('All fields are required.');
+            return;
+        }
+        try {
+            const response = await fetch('/api/customers/add/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, account_number: accountNumber, phone_number: phoneNumber, balance, password, device_id: deviceID }),
+            });
+            if (response.status === 400) {  
+                const errorData = await response.json();
+                alert(`Error adding customer: ${errorData.error}`); 
+            } else if (response.ok) {  
+                const customer = await response.json();
+                alert('Customer added successfully');
+                
+                // Append new customer to the table
+                const tableBody = document.getElementById('customerTableBody');
+                const newRow = `
+                    <tr id="customerRow${customer.customer_id}">
+                        <td>${customer.customer_id}</td>
+                        <td id="customerName${customer.customer_id}">${customer.name}</td>
+                        <td id="customerAccountNumber${customer.customer_id}">${customer.account_number}</td>
+                        <td id="customerPhoneNumber${customer.customer_id}">${customer.phone_number}</td>
+                        <td id="customerBalance${customer.customer_id}">${customer.balance}</td>
+                        <td id="customerPassword${customer.customer_id}">${customer.password}</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="showEditCustomerModal(${customer.customer_id})">Edit</button>
+                            <button class="btn btn-delete" onclick="deleteCustomer(${customer.customer_id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', newRow);
+
+                // Clear input fields
+                document.getElementById('customerName').value = '';
+                document.getElementById('customerAccountNumber').value = '';
+                document.getElementById('customerPhoneNumber').value = '';
+                document.getElementById('customerBalance').value = '';
+                document.getElementById('customerPassword').value = '';
+                document.getElementById('customerDeviceID').value = '';
+            } else {
+                throw new Error('Failed to add customer');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error adding customer. Please try again.');
+        }
+    }
+
+    // Function to show the edit customer modal
+    function showEditCustomerModal(customerId) {
+        const customerName = document.getElementById(`customerName${customerId}`).innerText;
+        const customerAccountNumber = document.getElementById(`customerAccountNumber${customerId}`).innerText;
+        const customerPhoneNumber = document.getElementById(`customerPhoneNumber${customerId}`).innerText;
+        const customerPassword = document.getElementById(`customerPassword${customerId}`).innerText;
+
+        document.getElementById('editCustomerId').value = customerId;
+        document.getElementById('editCustomerName').value = customerName;
+        document.getElementById('editCustomerAccountNumber').value = customerAccountNumber;
+        document.getElementById('editCustomerPhoneNumber').value = customerPhoneNumber;
+        document.getElementById('editCustomerPassword').value = customerPassword;
+
+        document.getElementById('editCustomerModal').style.display = 'block';
+    }
+
+    // Function to close the edit customer modal
+    function closeModal() {
+        document.getElementById('editCustomerModal').style.display = 'none';
+    }
+
+    async function updateCustomer() {
+        const customerId = document.getElementById('editCustomerId').value;
+        const name = document.getElementById('editCustomerName').value;
+        const accountNumber = document.getElementById('editCustomerAccountNumber').value;
+        const phoneNumber = document.getElementById('editCustomerPhoneNumber').value;
+        const password = document.getElementById('editCustomerPassword').value;
+    
+        try {
+            const response = await fetch(`/api/customers/update/${customerId}/`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken,},
+                body: JSON.stringify({
+                    name,
+                    account_number: accountNumber,
+                    phone_number: phoneNumber,
+                    password,
+                }),
+            });
+    
+            if (response.ok) {
+                alert('Customer updated successfully');
+                closeModal();
+                fetchCustomers(); 
+            } else {
+                let errorMessage = 'Error updating customer. Please try again.';
+                try {
+                    const errorData = await response.json(); 
+                    errorMessage = errorData.error || errorMessage; 
+                } catch (e) {
+                    const textResponse = await response.text(); 
+                    console.error('Non-JSON response:', textResponse); 
+                }
+                alert(errorMessage); 
+            }
+        } catch (error) {
+            console.error('Error updating customer:', error);
+            alert('Error updating customer. Please try again.');
+        }
+    }    
+
+    // Function to delete a customer
+    async function deleteCustomer(customerId) {
+        if (confirm('Are you sure you want to delete this customer?')) {
+            try {
+                const response = await fetch(`/api/customers/delete/${customerId}/`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    alert('Customer deleted successfully');
+                    document.getElementById(`customerRow${customerId}`).remove();
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error deleting customer: ${errorData.error}`);
+                }
+            } catch (error) {
+                console.error('Error deleting customer:', error);
+                alert('Error deleting customer. Please try again.');
+            }
+        }
+    }
+
+// ****************************   Manager Details ******************************
+// Fetch managers from the backend
+async function fetchManagers() {
+    try {
+        const response = await fetch('/fetch_manager/');
+        const managers = await response.json();
+
+        const managerTableBody = document.getElementById('managerTableBody');
+        managerTableBody.innerHTML = '';
+
+        managers.forEach(manager => {
+            const row = document.createElement('tr');
+            row.id = `managerRow${manager.manager_id}`;  // Set the row ID for deletion
+            row.innerHTML = `
+                <td>${manager.manager_id}</td>
+                <td id="managerName${manager.manager_id}">${manager.name}</td>
+                <td id="managerLevel${manager.manager_id}">${manager.level}</td>
+                <td id="managerPhoneNumber${manager.manager_id}">${manager.phone_number}</td>
+                <td id="managerExperience${manager.manager_id}">${manager.years_of_experience}</td>
+                <td id="managerPassword${manager.manager_id}">${manager.password}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="showEditManagerModal(${manager.manager_id})">Edit</button>
+                    <button class="btn btn-delete" onclick="deleteManager(${manager.manager_id})">Delete</button>
+                </td>
+            `;
+            managerTableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error fetching managers:', error);
+    }
+}
+
+// Add Manager Function
+async function addManager() {
+    const name = document.getElementById('managerName').value;
+    const level = document.getElementById('managerLevel').value;
+    const phoneNumber = document.getElementById('managerPhoneNumber').value;
+    const experience = document.getElementById('managerExperience').value;
+    const password = document.getElementById('managerPassword').value;  
+
+
+    // Check if all fields are filled
+    if (!name || !level || !phoneNumber || !experience || !password) {
+        alert('All fields are required.');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/managers/add/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, level, phone_number: phoneNumber, experience, password }),
+        });
+        if (response.status === 400) {
+            const errorData = await response.json();
+            alert(`Error adding manager: ${errorData.error}`);
+        } else if (response.ok) {
+            const manager = await response.json();
+            alert('Manager added successfully');
+
+            // Append new manager to the table
+            const tableBody = document.getElementById('managerTableBody');
+            const newRow = `
+                <tr id="managerRow${manager.manager_id}">
+                    <td>${manager.manager_id}</td>
+                    <td id="managerName${manager.manager_id}">${manager.name}</td>
+                    <td id="managerLevel${manager.manager_id}">${manager.level}</td>
+                    <td id="managerPhoneNumber${manager.manager_id}">${manager.phone_number}</td>
+                    <td id="managerExperience${manager.manager_id}">${manager.experience}</td>
+                    <td id="managerPassword${manager.manager_id}">${manager.password}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="showEditManagerModal(${manager.manager_id})">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteManager(${manager.manager_id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', newRow);
+
+            // Clear input fields
+            document.getElementById('managerName').value = '';
+            document.getElementById('managerLevel').value = '';
+            document.getElementById('managerPhoneNumber').value = '';
+            document.getElementById('managerExperience').value = '';
+            document.getElementById('managerPassword').value = '';
+        } else {
+            throw new Error('Failed to add manager');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error adding manager. Please try again.');
+    }
+}
+
+// Function to show the edit manager modal
+function showEditManagerModal(managerId) {
+    const managerName = document.getElementById(`managerName${managerId}`).innerText;
+    const managerLevel = document.getElementById(`managerLevel${managerId}`).innerText;
+    const managerPhoneNumber = document.getElementById(`managerPhoneNumber${managerId}`).innerText;
+    const managerExperience = document.getElementById(`managerExperience${managerId}`).innerText;
+    const managerPassword = document.getElementById(`managerPassword${managerId}`).innerText;
+
+    document.getElementById('editManagerId').value = managerId;
+    document.getElementById('editManagerName').value = managerName;
+    document.getElementById('editManagerLevel').value = managerLevel;
+    document.getElementById('editManagerPhoneNumber').value = managerPhoneNumber;
+    document.getElementById('editManagerExperience').value = managerExperience;
+    document.getElementById('editManagerPassword').value = managerPassword;
+
+    document.getElementById('editManagerModal').style.display = 'block';
+}
+
+// Function to close the edit manager modal
+function closeModal() {
+    document.getElementById('editManagerModal').style.display = 'none';
+}
+
+// Update Manager
+async function updateManager() {
+    const managerId = document.getElementById('editManagerId').value;
+    const name = document.getElementById('editManagerName').value;
+    const level = document.getElementById('editManagerLevel').value;
+    const phoneNumber = document.getElementById('editManagerPhoneNumber').value;
+    const experience = document.getElementById('editManagerExperience').value;
+    const password = document.getElementById('editManagerPassword').value;
+
+    try {
+        const response = await fetch(`/api/managers/update/${managerId}/`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, },
+            body: JSON.stringify({
+                name,
+                level,
+                phone_number: phoneNumber,
+                experience,
+                password,
+            }),
+        });
+
+        if (response.ok) {
+            alert('Manager updated successfully');
+            closeModal();
+            fetchManagers();
+        } else {
+            let errorMessage = 'Error updating manager. Please try again.';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                const textResponse = await response.text();
+                console.error('Non-JSON response:', textResponse);
+            }
+            alert(errorMessage);
+        }
+    } catch (error) {
+        console.error('Error updating manager:', error);
+        alert('Error updating manager. Please try again.');
+    }
+}
+
+// Function to delete a manager
+async function deleteManager(managerId) {
+    if (confirm('Are you sure you want to delete this manager?')) {
+        try {
+            const response = await fetch(`/api/managers/delete/${managerId}/`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                alert('Manager deleted successfully');
+                document.getElementById(`managerRow${managerId}`).remove();
+            } else {
+                const errorData = await response.json();
+                alert(`Error deleting manager: ${errorData.error}`);
+            }
+        } catch (error) {
+            console.error('Error deleting manager:', error);
+            alert('Error deleting manager. Please try again.');
+        }
+    }
+}
+
+async function unlockCustomer(customerId) {
+    console.log("Clicked");
+    const confirmUnlock = confirm('Are you sure you want to unlock this account?');
+    if (!confirmUnlock) return;
+
+    try {
+        const response = await fetch(`/api/customers/unlock/${customerId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (response.ok) {
+            alert('Customer account unlocked successfully.');
+            location.reload();  // Reload the page to reflect changes
+        } else {
+            const errorData = await response.json();
+            alert(`Error unlocking account: ${errorData.error}`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to unlock the account.');
+    }
+}
+</script>
+    
+</body>
+</html>

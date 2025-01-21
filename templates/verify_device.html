@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Verification</title>
+</head>
+<body>
+    <h1>Device Verification</h1>
+    <p>Please wait while we verify your device...</p>
+
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+    <script>
+        FingerprintJS.load().then(fp => {
+            fp.get().then(result => {
+                const deviceId = result.visitorId;
+                fetch(window.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({device_id: deviceId})
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Device verified successfully!');
+                    } else {
+                        alert('Authentication denied! New device detected.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
